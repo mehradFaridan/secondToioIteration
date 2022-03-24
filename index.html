@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/konva/8.3.2/konva.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+  </head>
+  <body onclick="changeBehavior()">
+    <div id="canvas"></div>
+    <script>
+    
+      // If clicked is false, keep drawing on page
+      let clicked = false
+      // Initial run through array will be from top to down
+      let goingUp = false
+      // Start array index at 0
+      let index = 0
+      // Heading down array at first
+      let increment = -2
+
+      // Counter for points in each line
+      let counter = 1
+
+      const socket = io()
+
+      let width = window.innerWidth
+      let height = window.innerHeight
+      
+      let stage = new Konva.Stage({
+        container: 'canvas',
+        width: width,
+        height: height,
+      })
+      
+      let layer = new Konva.Layer()
+      stage.add(layer)
+      
+      let isPaint = false
+      let mode = 'brush'
+      let lastLine
+
+      // Creating line 1
+      line = new Konva.Line({
+        stroke: '#df4b26',
+        strokeWidth: 5,
+        lineCap: 'round',
+        points: [],
+      })
+    
+      // Creating line 2
+      line2 = new Konva.Line({
+        stroke: '#df4b26',
+        strokeWidth: 5,
+        lineCap: 'round',
+        points: [],
+      })
+
+      // Adding lines to layer
+      layer.add(line)
+      layer.add(line2)
+
+      // If page has been clicked, set
+      // click variable to true
+      function changeBehavior(){
+        //clicked = true
+      }
+
+      socket.on('pos', (arg1, arg2) => {
+
+        let x = arg1
+        let y = arg2
+
+        // console.log("x: ", x)
+        // console.log("y: ", y)
+        
+      // socket.on('pos', (data) => {
+      //   // console.log(data)
+      //   let cubes = data.cubes
+      //   let cube = cubes[0]
+      //   let x = cube.x
+      //   let y = cube.y
+
+        // If click hasn't occured yet, then continue
+        // drawing toio co-ordinates on page
+        if(clicked === false){
+        
+          // Add first two point to line 1
+          if(counter <= 2){
+
+            let newPoints = line.points().concat([x, y])
+            line.points(newPoints)
+
+            counter++
+
+          }
+
+          // Add second set of points to line 2
+          else if((counter <= 4) && (counter > 2)){
+
+            let newPoints = line2.points().concat([x, y])
+            line2.points(newPoints)
+
+            counter++
+
+          }
+          
+          
+          //index = line.points().length
+
+        } 
+        
+        // If click has occured, then send the points 
+        // in the line's array to server
+        else {
+          
+          // if index is smaller than or equal to 0, then the 
+          // index must be incremented upwards & start at 0
+          // increment by 2 since we're going up the array
+          if(index <= 0){
+
+            goingUp = true
+            index = 0
+            increment = 2
+
+          }
+
+          // if index is larger than array then index must increment
+          // down through array & start at max length of points array.
+          // increment by -2 since we're going down the array
+          else if(index > line.points().length){
+
+            goingUp = false
+            index = line.points().length
+            increment = -2
+
+          }
+
+          // Since the line.points array is a flattened array,
+          // every even index is an x value and every odd 
+          // index is a y value           
+          let targetX = line.points()[index]
+          let targetY = line.points()[index + 1]
+
+          // Printing info
+          console.log("i = ", index)
+          console.log("x = ", targetX)
+          console.log("y = ", targetY)
+
+          // Emitting move positions back to the server
+          //socket.emit('move', targetX, targetY)
+
+          index += increment
+
+        }
+
+      })
+
+    </script>
+  </body>
+</html>
