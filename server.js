@@ -29,12 +29,14 @@ let drawCube_y = 0
 let drawCubeClick = false
 
 // Initialize cube1 properties
+let cube1Global
 let cube1_x = 0
 let cube1_y = 0
 let cube1_angle = 0
 let cube1_reverse = false
 
 // Initialize cube2 properties
+let cube2Global
 let cube2_x = 0
 let cube2_y = 0
 let cube2_angle = 0
@@ -63,27 +65,41 @@ async function main(){
   const drawCube = await cubeList[0].connect()
   const cube1 = await cubeList[1].connect()
   const cube2 = await cubeList[2].connect()
-
+  cube1Global = cube1
+  cube2Global = cube2
 
   io.on('connection', async (socket) => {
 
     console.log("connection established, toio's turned on")
 
     // Store cube1 position info
-    cube1.on('id:position-id', (data) =>{
+    cube1.on('id:position-id', (data) => {
 
       cube1_x = data.x
       cube1_y = data.y
       cube1_angle = data.angle
 
+      if(line1.length >= 4){
+
+        player(1)
+
+      }
+
+
     })
 
-    // Store cube2 position info
+    //Store cube2 position info
     cube2.on('id:position-id', (data) =>{
 
       cube2_x = data.x
       cube2_y = data.y
       cube2_angle = data.angle
+
+      if(line2.length >= 4){
+
+        player(2)
+
+      }
 
     })
 
@@ -143,9 +159,6 @@ async function main(){
         else if(counter == 5){
           
           play = true
-          console.log(play)
-          console.log("test123")
-          player(1)
 
         }
 
@@ -171,8 +184,6 @@ async function main(){
 
     })
 
-    console.log(play)
-
     // If click has occured, points will be sent to
     // server that the toio must move to
     // socket.on('move', (x, y) => {
@@ -190,18 +201,23 @@ async function main(){
 }
 
 
-function player(cubeNum){
+function player(id){
 
   // If it's time to move toios
   // if(play){
 
-    let targetX
-    let targetY
+  let targetX
+  let targetY
 
-    // Move toio 1
+  let diffX
+  let diffY
+
+  // toio 1
+
+  if(id == 1){
 
     // Point 1 => Point 2
-    if(cube1_reverse === false){
+    if(cube1_reverse == false){
 
       targetX = line1[0]
       targetY = line1[1]
@@ -209,66 +225,82 @@ function player(cubeNum){
     }
 
     // Point 2 => Point 1
-    else{
+    if(cube1_reverse == true){
 
       targetX = line1[2]
       targetY = line1[3]
 
     }
 
-    // while(true){
+    diffX = Math.abs(targetX - cube1_x)
+    diffY = Math.abs(targetY - cube1_y)
 
-      let diffX = targetX - cube1_x
-      let diffY = targetY - cube1_y
-      console.log("diffX: ", diffX)
-      console.log("diffY: ", diffY)
+    if((diffX < 25) && (diffY < 25)){
 
-      //let distance = Math.sqrt(diffX ** 2 + diffY ** 2)
+      if(cube1_reverse == true){
 
-      if((diffX < 10) && (diffY < 10)){
+        cube1_reverse = false
 
-        if(cube1_reverse){
-
-          cube1_reverse = false
-
-        }
-
-        else{
-
-          cube1_reverse = true
-
-        }
-        
       }
 
       else{
 
-        if(cubeNum == 1){
+        cube1_reverse = true
 
-          cube.move(...move(targetX, targetY, cube1_x, cube1_y, cube1_angle), 100)
+      }
+    
+    }
 
-        }
+    cube1Global.move(...move(targetX, targetY, cube1_x, cube1_y, cube1_angle), 100)
 
-        if(cubeNum == 2){
 
-          cube.move(...move(targetX, targetY, cube2_x, cube2_y, cube2_angle), 100)
+  }
 
-        }
+  else if(id == 2){
+
+      // Point 1 => Point 2
+    if(cube2_reverse == false){
+
+      targetX = line2[0]
+      targetY = line2[1]
+
+    }
+
+    // Point 2 => Point 1
+    if(cube2_reverse == true){
+
+      targetX = line2[2]
+      targetY = line2[3]
+
+    }
+
+    diffX = Math.abs(targetX - cube2_x)
+    diffY = Math.abs(targetY - cube2_y)
+
+    if((diffX < 25) && (diffY < 25)){
+
+      if(cube2_reverse == true){
+
+        cube2_reverse = false
 
       }
 
-    // }
+      else{
 
-      //cube1.move(...move(), 100)
+        cube2_reverse = true
 
+      }
+    
+    }
 
-    // Move toio 2
+    cube2Global.move(...move(targetX, targetY, cube2_x, cube2_y, cube2_angle), 100)
 
+  }
 
-  //}
+  console.log("diffX: ", diffX)
+  console.log("diffY: ", diffY)
 
-
-
+  //let distance = Math.sqrt(diffX ** 2 + diffY ** 2)
 }
 
 
@@ -352,8 +384,5 @@ function move(targetX, targetY, cX, cY, cA) {
 
 }
 
+
 main()
-
-
-
-
